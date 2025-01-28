@@ -11,7 +11,6 @@ import ru.kata.spring.boot_security.demo.models.Role;
 import ru.kata.spring.boot_security.demo.models.User;
 import ru.kata.spring.boot_security.demo.repository.RoleRepository;
 import ru.kata.spring.boot_security.demo.repository.UserRepository;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -20,7 +19,7 @@ import java.util.stream.Collectors;
 public class CustomUserDetailService implements UserDetailsService {
 
     private UserRepository userRepository;
-    private RoleRepository roleRepository;
+    private final RoleRepository roleRepository;
 
 
     public CustomUserDetailService(UserRepository userRepository,
@@ -51,8 +50,8 @@ public class CustomUserDetailService implements UserDetailsService {
     }
 
 
-    public User update(User user) {
-        return userRepository.save(user);
+    public void update(User user) {
+        userRepository.save(user);
     }
 
     public void delete(Long id) {

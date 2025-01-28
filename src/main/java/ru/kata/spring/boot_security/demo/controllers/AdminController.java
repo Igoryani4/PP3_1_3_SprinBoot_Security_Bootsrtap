@@ -1,6 +1,8 @@
 package ru.kata.spring.boot_security.demo.controllers;
 
 
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,6 +13,7 @@ import ru.kata.spring.boot_security.demo.repository.RoleRepository;
 import ru.kata.spring.boot_security.demo.repository.UserRepository;
 import ru.kata.spring.boot_security.demo.service.CustomUserDetailService;
 
+import java.security.Principal;
 import java.util.List;
 
 @Controller()
@@ -30,9 +33,17 @@ public class AdminController {
     }
 
     @GetMapping("/admin")
-    public String admin(Model model) {
+    public String admin(Model model, User user) {
+        UserDetails userDetails = (UserDetails) SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
+        User finduser = userRepository.findByUsernameOrEmail(userDetails
+                .getUsername(), userDetails.getUsername()).get();
         List<User> users = customUserDetailService.findAll();
-        model.addAttribute("users", users);
+        model.addAttribute("allUsers", users);
+        model.addAttribute("user", user);
+        model.addAttribute("this_user", finduser);
+        List<Role> roles = roleRepository.findAll();
+        model.addAttribute("roles", roles);
         return "admin";
     }
 
@@ -53,8 +64,17 @@ public class AdminController {
     }
 
     @GetMapping("/delete/{id}")
-    public String deleteUser(@PathVariable("id") Long id){
-        customUserDetailService.delete(id);
+    public String deleteUserForm(@PathVariable("id") Long id, Model model){
+        User user = customUserDetailService.findById(id);
+        List<Role> roles = roleRepository.findAll();
+        model.addAttribute("user", user);
+        model.addAttribute("roles", roles);
+        return "delete";
+    }
+
+    @PostMapping("/delete")
+    public String deleteUser(User user) {
+        customUserDetailService.delete(user.getId());
         return "redirect:/admin";
     }
 
@@ -69,6 +89,8 @@ public class AdminController {
 
     @PostMapping("/update")
     public String updateUser(User user){
+        String hashedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(hashedPassword);
         customUserDetailService.update(user);
         return "redirect:/admin";
     }

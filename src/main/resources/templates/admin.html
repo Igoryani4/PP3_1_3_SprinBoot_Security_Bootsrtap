@@ -1,46 +1,153 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
 <head>
-    <meta charset="UTF-8">
-    <title>Admin page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta charset="utf-8">
+    <title>Admin panel</title>
 </head>
-<style>
-    table, th, td {
-        border: 1px solid black;
-    }
-</style>
-</head>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 <body>
-<div th:switch="${users}">
-    <h2 th:case="null">No users found!</h2>
-    <div th:case="*">
-        <h2>Welcome to admin page this is full list users</h2>
-        <table>
-            <thead>
-            <tr>
-                <th>Id</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Password</th>
-                <th>Role</th>
-
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="user : ${users}">
-                <td th:text="${user.getId()}"></td>
-                <td th:text="${user.getUsername()}"></td>
-                <td th:text="${user.getEmail()}"></td>
-                <td th:text="${user.getPassword()}"></td>
-                <td th:text="${user.getRole()}"></td>
-                <td><a th:href="@{/update/{id}(id=${user.getId()})}">Edit</a></td>
-                <td><a th:href="@{/delete/{id}(id=${user.getId()})}">Delete</a></td>
-            </tr>
-            </tbody>
-        </table>
+<div class="row text-white bg-dark">
+    <div class="col d-flex justify-content-between align-items-center">
+        <div sec:authorize="isFullyAuthenticated()">
+            <h4 style="margin-left: 30px;"><b><span th:text="${this_user.getEmail()}"></span></b>  with roles <span
+                    th:text="${this_user.getRole()}"></span> </h4>
+        </div>
+        <div class="col-1 ml-auto">
+            <div sec:authorize="isAuthenticated()">
+                <a class="nav-link" href="/logout">Logout</a>
+            </div>
+        </div>
     </div>
-    <p><a href="/register">Create user</a></p>
-    <p><a href="/logout">Logout</a></p>
 </div>
+<div class="container-fluid">
+    <div class="row" style="height: 100vh;">
+        <div class="col-2">
+            <ul class="nav flex-column">
+                <li class="nav-item bg-primary mt-2">
+                    <a class="nav-link text-white" th:href="@{/admin}">Admin</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/user}">User</a>
+                </li>
+            </ul>
+        </div>
+        <div class="col-10 bg-light">
+            <h1><b>Admin panel</b></h1>
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a class="btn btn-light" data-toggle="tab" href="#nav-home">All users</a></li>
+                <li><a class="btn btn-light" data-toggle="tab" href="#nav-profile">New user</a></li>
+            </ul>
+            <div class="tab-content" id="nav-tabContent">
+                <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+                    <div class="col bg-white"><h3>All users</h3></div>
+                    <div class="col p-3" style="background-color: white;">
+                        <table class="table table-striped">
+                            <thead>
+                            <th>Id</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Password</th>
+                            <th>Role</th>
+                            <th>Edit</th>
+                            <th>Delete</th>
+                            </thead>
+                            <tbody>
+                            <tr th:each ="user: ${allUsers}">
+                                <td th:text="${user.getId()}"></td>
+                                <td th:text="${user.getUsername()}"></td>
+                                <td th:text="${user.getEmail()}"></td>
+                                <td th:text="${user.getPassword()}"></td>
+                                <td
+                                        th:text="${user.getRole()}">...
+                                </td>
+                                <td>
+                                    <a id="btEdit" class="btn btn-primary" th:attr="onclick=|edclick('${user.getId()}')|">Edit</a>
+                                </td>
+                                <td>
+                                    <a id="btDel" class="btn btn-danger" th:attr="onclick=|delclick('${user.getId()}')|">Delete</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
+                    <div class="col bg-white"><h3>Add new user</h3></div>
+                    <div class="col bg-white text-center">
+                        <form class="col-6 mx-auto" action="#" th:action="@{/register}" th:object="${user}" method="post">
+                            <div class="form-group row">
+                                <label class="col col-form-label" for="username">User name</label>
+                                <input class="form-control-plaintext border" type="text" th:field="*{username}" id="username" placeholder="Username" />
+                            </div>
+                            <div class="form-group row">
+                                <label class="col col-form-label" for="email">Email</label>
+                                <input class="form-control-plaintext border" type="text" th:field="*{email}" id="email" placeholder="Email" />
+                            </div>
+                            <div class="form-group row">
+                                <label class="col col-form-label" for="password">Password</label>
+                                <input class="form-control" type="password" th:field="*{password}" id="password" placeholder="Password" />
+                            </div>
+                            <div class="form-group row">
+                                <label class="col col-form-label">Roles:
+                                    <input type="checkbox" name="role"
+                                           th:each="role : ${roles}"
+                                           th:text="${role.getTitle()}"
+                                           th:value="${role.getId()}"
+                                           th:field="*{role}"
+                                    />
+                                </label>
+                            </div>
+                            <button class="btn btn-success" name="action" type="submit" value="save">Add new user</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+ modal placeholder
+<div id='myModal' class='modal fade in' tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content" style="overflow-y: auto;">
+            <div id='myModalContent'></div>
+        </div>
+    </div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<script>
+    function edclick(id) {
+        $.ajaxSetup({ cache: false });
+        $('#myModalContent').load("update/"+id, function () {
+            $('#myModal').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    };
+</script>
+<script>
+    function delclick(id) {
+        $.ajaxSetup({ cache: false });
+        $('#myModalContent').load("delete/"+id, function () {
+            $('#myModal').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    };
+</script>
 </body>
 </html>
